@@ -2,152 +2,172 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>クイズゲーム</title>
+<title>ピクセル戦闘機ゲーム</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-        color: #fff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-    }
-    .container {
-        background: #2f2f4f;
-        padding: 30px;
-        border-radius: 15px;
-        width: 350px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        text-align: center;
-    }
-    h1 {
-        margin-bottom: 20px;
-    }
-    .question {
-        margin-bottom: 20px;
-    }
-    .option {
-        display: block;
-        background: #444;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-    .option:hover {
-        background: #666;
-    }
-    .correct {
-        background: #4caf50 !important;
-    }
-    .wrong {
-        background: #f44336 !important;
-    }
-    #nextBtn {
-        margin-top: 15px;
-        padding: 10px 20px;
-        border: none;
-        background: #6c5ce7;
-        color: white;
-        border-radius: 8px;
-        cursor: pointer;
-        display: none;
-    }
+body{
+margin:0;
+background:black;
+overflow:hidden;
+color:white;
+text-align:center;
+font-family:sans-serif;
+}
+canvas{
+background:#111;
+display:block;
+margin:auto;
+border:3px solid white;
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>クイズゲーム</h1>
-    <div id="quiz">
-        <div class="question" id="question"></div>
-        <div id="options"></div>
-    </div>
-    <button id="nextBtn">次の問題</button>
-    <div id="result"></div>
-</div>
+<h2>ピクセル戦闘機ゲーム</h2>
+<p>← → 移動 / SPACE 攻撃</p >
+<p>スコア: <span id="score">0</span></p >
+
+<canvas id="game" width="400" height="600"></canvas>
 
 <script>
-const quizData = [
-    {
-        question: "日本で一番高い山はどれ？",
-        options: ["北岳", "富士山", "奥穂高岳", "槍ヶ岳"],
-        answer: 1
-    },
-    {
-        question: "世界で一番面積が大きい国はどれ？",
-        options: ["アメリカ", "中国", "ロシア", "カナダ"],
-        answer: 2
-    },
-    {
-        question: "次のうちプログラミング言語はどれ？",
-        options: ["Photoshop", "Python", "Figma", "Blender"],
-        answer: 1
-    }
-];
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
-let currentQuestion = 0;
-let score = 0;
+let score=0;
+let gameOver=false;
 
-const questionEl = document.getElementById("question");
-const optionsEl = document.getElementById("options");
-const nextBtn = document.getElementById("nextBtn");
-const resultEl = document.getElementById("result");
-
-function loadQuestion() {
-    nextBtn.style.display = "none";
-    optionsEl.innerHTML = "";
-    const q = quizData[currentQuestion];
-    questionEl.textContent = q.question;
-
-    q.options.forEach((option, index) => {
-        const btn = document.createElement("div");
-        btn.textContent = option;
-        btn.classList.add("option");
-        btn.onclick = () => selectAnswer(btn, index);
-        optionsEl.appendChild(btn);
-    });
-}
-
-function selectAnswer(button, index) {
-    const correct = quizData[currentQuestion].answer;
-    const options = document.querySelectorAll(".option");
-
-    options.forEach((btn, i) => {
-        btn.onclick = null;
-        if (i === correct) {
-            btn.classList.add("correct");
-        }
-    });
-
-    if (index === correct) {
-        score++;
-    } else {
-        button.classList.add("wrong");
-    }
-
-    nextBtn.style.display = "block";
-}
-
-nextBtn.onclick = () => {
-    currentQuestion++;
-    if (currentQuestion < quizData.length) {
-        loadQuestion();
-    } else {
-        showResult();
-    }
+const player={
+x:180,
+y:520,
+w:40,
+h:40,
+speed:5
 };
 
-function showResult() {
-    document.getElementById("quiz").innerHTML = "";
-    nextBtn.style.display = "none";
-    resultEl.innerHTML = `<h2>あなたのスコア：${score} / ${quizData.length}</h2>`;
+const bullets=[];
+const enemies=[];
+const keys={};
+
+document.addEventListener("keydown",e=>{
+keys[e.key]=true;
+
+if(e.code==="Space"){
+bullets.push({
+x:player.x+18,
+y:player.y,
+w:4,
+h:10
+});
+}
+});
+
+document.addEventListener("keyup",e=>{
+keys[e.key]=false;
+});
+
+function spawnEnemy(){
+enemies.push({
+x:Math.random()*360,
+y:-40,
+w:40,
+h:40,
+speed:2+Math.random()*2
+});
 }
 
-loadQuestion();
+function update(){
+
+if(keys["ArrowLeft"]&&player.x>0){
+player.x-=player.speed;
+}
+
+if(keys["ArrowRight"]&&player.x<360){
+player.x+=player.speed;
+}
+
+bullets.forEach(b=>{
+b.y-=8;
+});
+
+enemies.forEach(e=>{
+e.y+=e.speed;
+
+if(e.y>600){
+gameOver=true;
+}
+});
+
+bullets.forEach((b,bi)=>{
+enemies.forEach((e,ei)=>{
+
+if(
+b.x<e.x+e.w&&
+b.x+b.w>e.x&&
+b.y<e.y+e.h&&
+b.y+b.h>e.y
+){
+bullets.splice(bi,1);
+enemies.splice(ei,1);
+
+score+=10;
+document.getElementById("score").textContent=score;
+}
+
+});
+});
+
+enemies.forEach(e=>{
+
+if(
+player.x<e.x+e.w&&
+player.x+player.w>e.x&&
+player.y<e.y+e.h&&
+player.y+player.h>e.y
+){
+gameOver=true;
+}
+
+});
+}
+
+function draw(){
+
+ctx.clearRect(0,0,400,600);
+
+ctx.fillStyle="cyan";
+ctx.fillRect(player.x,player.y,player.w,player.h);
+
+ctx.fillStyle="yellow";
+bullets.forEach(b=>{
+ctx.fillRect(b.x,b.y,b.w,b.h);
+});
+
+ctx.fillStyle="red";
+enemies.forEach(e=>{
+ctx.fillRect(e.x,e.y,e.w,e.h);
+});
+
+if(gameOver){
+ctx.fillStyle="white";
+ctx.font="40px sans-serif";
+ctx.fillText("GAME OVER",70,300);
+}
+}
+
+function loop(){
+
+if(!gameOver){
+update();
+draw();
+requestAnimationFrame(loop);
+}else{
+draw();
+}
+
+}
+
+setInterval(spawnEnemy,1000);
+
+loop();
 </script>
 
 </body>
