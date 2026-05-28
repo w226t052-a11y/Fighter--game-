@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>クイズゲーム</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .container {
+        background: #2f2f4f;
+        padding: 30px;
+        border-radius: 15px;
+        width: 350px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        text-align: center;
+    }
+    h1 {
+        margin-bottom: 20px;
+    }
+    .question {
+        margin-bottom: 20px;
+    }
+    .option {
+        display: block;
+        background: #444;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .option:hover {
+        background: #666;
+    }
+    .correct {
+        background: #4caf50 !important;
+    }
+    .wrong {
+        background: #f44336 !important;
+    }
+    #nextBtn {
+        margin-top: 15px;
+        padding: 10px 20px;
+        border: none;
+        background: #6c5ce7;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        display: none;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>クイズゲーム</h1>
+    <div id="quiz">
+        <div class="question" id="question"></div>
+        <div id="options"></div>
+    </div>
+    <button id="nextBtn">次の問題</button>
+    <div id="result"></div>
+</div>
+
+<script>
+const quizData = [
+    {
+        question: "日本で一番高い山はどれ？",
+        options: ["北岳", "富士山", "奥穂高岳", "槍ヶ岳"],
+        answer: 1
+    },
+    {
+        question: "世界で一番面積が大きい国はどれ？",
+        options: ["アメリカ", "中国", "ロシア", "カナダ"],
+        answer: 2
+    },
+    {
+        question: "次のうちプログラミング言語はどれ？",
+        options: ["Photoshop", "Python", "Figma", "Blender"],
+        answer: 1
+    }
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const nextBtn = document.getElementById("nextBtn");
+const resultEl = document.getElementById("result");
+
+function loadQuestion() {
+    nextBtn.style.display = "none";
+    optionsEl.innerHTML = "";
+    const q = quizData[currentQuestion];
+    questionEl.textContent = q.question;
+
+    q.options.forEach((option, index) => {
+        const btn = document.createElement("div");
+        btn.textContent = option;
+        btn.classList.add("option");
+        btn.onclick = () => selectAnswer(btn, index);
+        optionsEl.appendChild(btn);
+    });
+}
+
+function selectAnswer(button, index) {
+    const correct = quizData[currentQuestion].answer;
+    const options = document.querySelectorAll(".option");
+
+    options.forEach((btn, i) => {
+        btn.onclick = null;
+        if (i === correct) {
+            btn.classList.add("correct");
+        }
+    });
+
+    if (index === correct) {
+        score++;
+    } else {
+        button.classList.add("wrong");
+    }
+
+    nextBtn.style.display = "block";
+}
+
+nextBtn.onclick = () => {
+    currentQuestion++;
+    if (currentQuestion < quizData.length) {
+        loadQuestion();
+    } else {
+        showResult();
+    }
+};
+
+function showResult() {
+    document.getElementById("quiz").innerHTML = "";
+    nextBtn.style.display = "none";
+    resultEl.innerHTML = `<h2>あなたのスコア：${score} / ${quizData.length}</h2>`;
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
